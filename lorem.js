@@ -3,9 +3,6 @@ Array.prototype.random = function() {
 	const length = this.length;
 	return length === 0 ? null : this[Math.floor(Math.random() * length)];
 };
-Array.prototype.interpose = function(separator) {
-	return this.join(separator) + separator;
-};
 String.prototype.capitalized = function() {
 	return this.replace(/(^|\.\s*)([a-z])/gm, (_, d, L) => d + L.toUpperCase());
 };
@@ -78,21 +75,16 @@ function _sentence(words) {
 	return sentence;
 }
 
-/// generates a number of random sentences as `string[][]`
-function _sentences(count = 1, words) {
-	if (Array.isArray(count)) count = Number.randomInt(...count);
-	return Array.from({ length: count }, () => _sentence(words));
-}
-
 /// generates a paragraph of random sentences as `string`
 /// + `sentences: number | [ min:number, max:number]`
 /// + `words: number | [ min:number, max:number]`
 /// + `tags: string[]` - list of HTML tags to choose from
 /// + `chance: number` - probability of wrapping the word (default: 30%)
 function _paragraph(sentences = 3, words, tags, chance) {
-	return _sentences(sentences, words).map(
-		s => s.map(w => _wrap(w, tags, chance)).join(" ")
-	).interpose(". ").trim().capitalized();
+	if (Array.isArray(sentences)) sentences = Number.randomInt(...sentences);
+	return Array.from({ length: sentences }, () => _sentence(words).map(
+		(w, i) => _wrap((i === 0 ? w.capitalized() : w), tags, chance)
+	).join(" ")).join(". ") + ".";
 }
 
 function _paragraphs(count = 1, html = false, sentences, words, tags, chance) {
@@ -104,10 +96,6 @@ function _paragraphs(count = 1, html = false, sentences, words, tags, chance) {
 }
 
 export function lorem(options = { paragraphs: 1 }) {
-
 	const { paragraphs, sentences, words, tags, chance, html } = options;
-
-	if (!paragraphs) return _paragraph(sentences, words, tags, chance);
 	return _paragraphs(paragraphs, html, sentences, words, tags, chance);
-
 };
